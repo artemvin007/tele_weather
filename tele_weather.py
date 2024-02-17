@@ -1,19 +1,11 @@
-"""Простой телеграм бот отвечающий прогнозом погоды @WeatherTelegramBot"""
-
-# Проверьте не блокируется ли API телеграмма на уровне провайдера
-# Документация https://github.com/eternnoir/pyTelegramBotAPI
-#              https://github.com/csparpa/pyowm
 
 import pyowm  # Импортируем пакет с помощью которого мы узнаем погоду
 import telebot  # Импортируем пакет бота через ввод в CMD "pip install pytelegrambotapi"
-import os  # Импортируем для использования переменных окружения
 import time
 
-# config_dict = get_default_config()
-# config_dict['language'] = 'ru'  # Настраиваем язык для owm.
-owmToken = os.getenv('YOUR_OWM_TOKEN')  # Регистрируемся на сайте погоды, получаем ключ API
-owm = pyowm.OWM(owmToken, language='ru')
-botToken = os.getenv('YOUR_TELEGRAM_BOT_TOKEN')  # Получаем токен через BotFather в телеграме в чате коммандами. /newbot имя моего APITelegramBot
+owmToken = '0dde369d6504f5f84f2596b7fb73b966'
+owm = pyowm.OWM(owmToken)
+botToken = '6534262803:AAG8rjKkyAgZAw9qi85JsppD27TuUi_RCqI'
 bot = telebot.TeleBot(botToken)
 
 
@@ -30,24 +22,23 @@ def send_message(message):
         # и выводит ошибку, то происходит переход к except
         try:
             # Имя города пользователь вводит в чат, после этого мы его передаем в функцию
-            observation = owm.weather_at_place(message.text)
-            weather = observation.get_weather()
-            temp = weather.get_temperature("celsius")["temp"]  # Присваиваем переменной значение температуры из таблицы
-            temp = round(temp)
+            observation = owm.weather_manager()
+            weather = observation.weather_at_place(message.text).weather
+            temp = weather.temperature("celsius")['temp']
             print(time.ctime(), "User id:", message.from_user.id)
-            print(time.ctime(), "Message:", message.text.title(), temp, "C", weather.get_detailed_status())
+            print(time.ctime(), "Message:", message.text.title(), temp, "C")
 
-            # Формируем и выводим ответ
-            answer = "В городе " + message.text.title() + " сейчас " + weather.get_detailed_status() + "." + "\n"
-            answer += "Температура около: " + str(temp) + " С" + "\n\n"
-            if temp < -10:
-                answer += "Пи**ц как холодно, одевайся как танк!"
-            elif temp < 10:
-                answer += "Холодно, одевайся теплее."
-            elif temp > 25:
-                answer += "Жарень."
+            answer = "В этом городе: " + str(temp) + "°C" + "\nОтносительная влажность: " + str(weather.humidity) + "%\n"
+
+            if weather.clouds < 25:
+                answer += "Безоблачно"
+            elif weather.clouds < 50:
+                answer += "Немного облачно"
+            elif weather.clouds < 75:
+                answer += "Облачно"
             else:
-                answer += "На улице вроде норм!!!"
+                answer += "Пасмурно"
+
         except Exception:
             answer = "Не найден город, попробуйте ввести название снова.\n"
             print(time.ctime(), "User id:", message.from_user.id)
@@ -57,4 +48,5 @@ def send_message(message):
 
 
 # Запускаем бота
-bot.polling(none_stop=True)
+if __name__ == __name__:
+    bot.polling(none_stop=True)
