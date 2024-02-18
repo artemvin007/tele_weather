@@ -3,10 +3,11 @@ import telebot #telegram api
 from telebot import types
 import time
 from datetime import datetime
-import pytz
+from pytz import timezone
 
 
 bot = telebot.TeleBot('6534262803:AAG8rjKkyAgZAw9qi85JsppD27TuUi_RCqI')
+owm = pyowm.OWM('0dde369d6504f5f84f2596b7fb73b966')
 
 class City:
     def __init__(self, name, composition, photos):
@@ -17,13 +18,12 @@ class City:
             "Посмотреть отели",
             "Выбрать другой город"
         ]
-        self.owm = pyowm.OWM('0dde369d6504f5f84f2596b7fb73b966')
         self.name = name
         self.composition = composition
         self.photos = photos
 
     def get_weather(self):
-        observation = self.owm.weather_manager()
+        observation = owm.weather_manager()
         weather = observation.weather_at_place(self.name).weather
         temp = weather.temperature("celsius")['temp']
 
@@ -42,20 +42,15 @@ class City:
 
     def get_time(self):
         try:
-            # Получаем текущее время
-            now = datetime.now()
-
             # Определяем часовой пояс для введенного города
-            tz = pytz.timezone(self.name)
-
+            city_timezone = timezone(self.name)
             # Конвертируем текущее время в часовой пояс города
-            city_time = now.astimezone(tz)
+            city_time = datetime.now(city_timezone)
 
             # Форматируем и выводим время
-            return("Текущее время в" + self.name + ":" + city_time.strftime('%Y-%m-%d %H:%M:%S %Z'))
-
-        except pytz.UnknownTimeZoneError:
-            return("Ошибка: Часовой пояс для города" + self.name + "не найден.")
+            return city_time.strftime('%Y-%m-%d %H:%M:%S')
+        except Exception as e:
+            return f"Ошибка: {e}"
 
 
 menu = {
@@ -101,9 +96,9 @@ def send_message(message):
                     bot.send_photo(message.chat.id, open(i, "rb"))
                 bot.send_message(message.chat.id, menu["current_city"].composition, reply_markup=create_markup(menu["current_city"].menu))
             if (message.text == "Узнать погоду"):
-                bot.send_message(menu["current_city"].get_weather())
+                bot.send_message(message.chat.id, menu["current_city"].get_weather())
             if(message.text == "Узнать время"):
-                bot.send_message(menu["current_city"].get_time())
+                bot.send_message(message.chat.id, menu["current_city"].get_time())
             if (message.text == "Выбрать другой город"):
                 bot.send_message(message.chat.id, "Введите название другого города", reply_markup=create_markup(menu["city_choise_menu"].keys()))
                 menu["current_city"] = None
