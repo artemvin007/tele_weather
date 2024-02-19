@@ -12,7 +12,7 @@ class City:
         self.menu = [
             name,
             "Узнать погоду",
-            "Посмотерть отель",
+            "Посмотреть отель",
             "Выбрать другой город"
         ]
         self.name = name
@@ -141,4 +141,3 @@ def send_message(message):
 
 if __name__ == __name__:
     bot.polling(none_stop=True)
-
