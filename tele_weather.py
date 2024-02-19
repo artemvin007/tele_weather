@@ -2,11 +2,9 @@ import pyowm #api for weather reading
 import telebot #telegram api
 from telebot import types
 import time
-from datetime import datetime
-from pytz import timezone
+from deep_translator import GoogleTranslator
 
-
-bot = telebot.TeleBot('6534262803:AAG8rjKkyAgZAw9qi85JsppD27TuUi_RCqI')
+bot = telebot.TeleBot('7013440101:AAE1os4MQVhWWC85fiOEVt6W4WlaoqO9uUc')
 owm = pyowm.OWM('0dde369d6504f5f84f2596b7fb73b966')
 
 class City:
@@ -14,13 +12,9 @@ class City:
         self.menu = [
             name,
             "Узнать погоду",
-
+            "Посмотерть отель",
             "Выбрать другой город"
         ]
-        '''
-            "Узнать время",
-            "Посмотреть отели",
-        '''
         self.name = name
         self.composition = composition
         self.photos = photos
@@ -43,17 +37,12 @@ class City:
             answer += "Пасмурно"
         return answer
 
-    def get_time(self):
-        try:
-            # Определяем часовой пояс для введенного города
-            city_timezone = timezone(self.name)
-            # Конвертируем текущее время в часовой пояс города
-            city_time = datetime.now(city_timezone)
+    def to_eng(self):
+        return GoogleTranslator(source='ru', target='en').translate(self.name)
 
-            # Форматируем и выводим время
-            return city_time.strftime('%Y-%m-%d %H:%M:%S')
-        except Exception as e:
-            return f"Ошибка: {e}"
+    def get_hotel(self):
+        return (f"https://ostrovok.ru/hotel/russia/" + self.to_eng().lower())
+
 
 
 menu = {
@@ -91,7 +80,13 @@ menu = {
                         "Если из города хочется вырваться на простор, а на море уже были, — поехали в горы. В долине реки Баксан, начинающейся у подножья Эльбруса, можно устроить контрастный отдых, который легко подстроить под любые запросы и уровень подготовки. Планируем путешествие в Приэльбрусье: подняться выше облаков, попробовать всю продукцию Нальчикского халвичного пивзавода, побывать на леднике.\
 Есть чем заняться в любое время года: летом — туризм, хайкинг и даже отдых с элементами лечебного, зимой — лыжи, сноуборд.\
 Красивые виды доступны независимо от уровня подготовки: и из окна автомобиля, и с привалов размеченных троп.Есть вся инфраструктура для первой встречи с горами: тропы, простые маршруты, прокат снаряжения и гиды.",
-                        ["Терскол1.jpeg", "Терскол2.jpeg", "Терскол3.jpeg"])
+                        ["Терскол1.jpeg", "Терскол2.jpeg", "Терскол3.jpeg"]),
+        "Владивосток": City("Владивосток",
+                            "ВлаВладивосток, Россиядивосток — это не только город-порт, но и город-портал, который перемещает туристов в нужное ему измерение. Для жителей западной части России — это ворота в Азию, для жителей Азии — ближайший европейский город, всего в пяти часах езды от русско-китайской границы.",
+                            ["Владивосток1.jpeg", "Владивосток2.jpeg"]),
+        "Гусь-Хрустальный": City("Гусь-Хрустальный",
+                                 "Город Гусь-Хрустальный входит в знаменитое Золотое кольцо России в большинстве своем благодаря производству красивых и качественных изделий из хрусталя, прославленных на всю страну еще с 19 века: здешний материал сочетает яркие расцветки, оригинальный русский стиль и качество.",
+                                ["Гусь-Хрустальный1.jpeg", "Гусь-Хрустальный2.jpeg"])
     },
     "current_city": None
 }
@@ -131,13 +126,11 @@ def send_message(message):
                 bot.send_message(message.chat.id, menu["current_city"].composition, reply_markup=create_markup(menu["current_city"].menu))
             if (message.text == "Узнать погоду"):
                 bot.send_message(message.chat.id, menu["current_city"].get_weather())
-            '''
-            if(message.text == "Узнать время"):
-                bot.send_message(message.chat.id, menu["current_city"].get_time())
-            '''
             if (message.text == "Выбрать другой город"):
                 bot.send_message(message.chat.id, "Введите название другого города", reply_markup=create_markup(menu["city_choise_menu"].keys()))
                 menu["current_city"] = None
+            if (message.text == "Посмотерть отель"):
+                bot.send_message(message.chat.id, menu["current_city"].get_hotel())
 
 
     except Exception:
