@@ -100,7 +100,7 @@ def create_markup(menu_items):
 @bot.message_handler(commands=['start', 'help'])
 def start_message(message):
     bot.send_message(
-        message.from_user.id, "Здравствуйте. Вы можете узнать здесь погоду. Просто напишите название города." + "\n",
+        message.from_user.id, "Здравствуйте. Вы можете выбрать город и посмотреть погоду и отели в нём!" + "\n",
         reply_markup=create_markup(menu["city_choise_menu"].keys())
     )
 
