@@ -87,8 +87,7 @@ menu = {
         "Гусь-Хрустальный": City("Гусь-Хрустальный",
                                  "Город Гусь-Хрустальный входит в знаменитое Золотое кольцо России в большинстве своем благодаря производству красивых и качественных изделий из хрусталя, прославленных на всю страну еще с 19 века: здешний материал сочетает яркие расцветки, оригинальный русский стиль и качество.",
                                 ["Гусь-Хрустальный1.jpeg", "Гусь-Хрустальный2.jpeg"])
-    },
-    "current_city": None
+    }
 }
 
 def create_markup(menu_items):
@@ -103,6 +102,7 @@ def start_message(message):
         message.from_user.id, "Здравствуйте. Вы можете выбрать город и посмотреть погоду и отели в нём!" + "\n",
         reply_markup=create_markup(menu["city_choise_menu"].keys())
     )
+    menu[message.from_user.id] = None
 
 
 
@@ -112,31 +112,34 @@ def send_message(message):
     try:
         print(time.ctime(), "User id:", message.from_user.id)
         print(time.ctime(), "Message:", message.text.title())
-        if (menu["current_city"] == None):
+        if (menu[message.from_user.id] == None):
             if (message.text in menu["city_choise_menu"].keys()):
-                menu["current_city"] = menu["city_choise_menu"][message.text]
+                menu[message.from_user.id] = menu["city_choise_menu"][message.text]
             else:
-                menu["current_city"] = City(message.text, "Это отличный город!", ["default.png"])
+                menu[message.from_user.id] = City(message.text, "Это отличный город!", ["default.png"])
+                menu[message.from_user.id].get_weather()
 
-        if (menu["current_city"] != None):
-            if (message.text.lower() == menu["current_city"].name.lower()):
-                bot.send_message(message.chat.id, menu["current_city"].name)
-                for i in menu["current_city"].photos:
+        if (menu[message.from_user.id] != None):
+            if (message.text.lower() == menu[message.from_user.id].name.lower()):
+                bot.send_message(message.chat.id, menu[message.from_user.id].name)
+                for i in menu[message.from_user.id].photos:
                     bot.send_photo(message.chat.id, open(i, "rb"))
-                bot.send_message(message.chat.id, menu["current_city"].composition, reply_markup=create_markup(menu["current_city"].menu))
+                bot.send_message(message.chat.id, menu[message.from_user.id].composition, reply_markup=create_markup(menu[message.from_user.id].menu))
             if (message.text.lower() == "узнать погоду"):
-                bot.send_message(message.chat.id, menu["current_city"].get_weather())
+                bot.send_message(message.chat.id, menu[message.from_user.id].get_weather())
             if (message.text.lower() == "выбрать другой город"):
                 bot.send_message(message.chat.id, "Введите название другого города", reply_markup=create_markup(menu["city_choise_menu"].keys()))
-                menu["current_city"] = None
+                menu[message.from_user.id] = None
             if (message.text.lower() == "посмотреть отель"):
-                bot.send_message(message.chat.id, menu["current_city"].get_hotel())
+                bot.send_message(message.chat.id, menu[message.from_user.id].get_hotel())
 
 
     except Exception:
         print(time.ctime(), "User id:", message.from_user.id)
         print(time.ctime(), "Message:", message.text.title(), 'Error')
-        bot.send_message(message.chat.id, "Не найден город, попробуйте ввести название снова.\n")
+        menu[message.from_user.id] = None
+        bot.send_message(message.chat.id, "Не найден город, попробуйте ввести название снова.\n", reply_markup=create_markup(menu["city_choise_menu"].keys()))
+
 
 
 if __name__ == __name__:
